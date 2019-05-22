@@ -1,8 +1,14 @@
 package com.e.heroaddandget;
 
+import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.StrictMode;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -11,6 +17,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -28,6 +35,7 @@ public class HeroAPIActivity extends AppCompatActivity {
     EditText etHeroname,etDesc;
     Button btnSave;
     ImageView IV;
+    String imagePath;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +43,13 @@ public class HeroAPIActivity extends AppCompatActivity {
         etHeroname =findViewById(R.id.etHeroname);
         etDesc = findViewById(R.id.etDesc);
         IV = findViewById(R.id.IV);
-        LoadFormURl();
+       // LoadFormURl();
+        IV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BrowseImage();
+            }
+        });
         btnSave = findViewById(R.id.btnSave);
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -44,22 +58,59 @@ public class HeroAPIActivity extends AppCompatActivity {
             }
         });
     }
-
-    private void StrictMode(){
-        android.os.StrictMode.ThreadPolicy policy= new android.os.StrictMode.ThreadPolicy.Builder().permitAll().build();
-        android.os.StrictMode.setThreadPolicy(policy)   ;
+    private void BrowseImage(){
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, 0);
     }
-    private void LoadFormURl() {
-        StrictMode();
-        try {
-                String imgURL = "https://softwarica.edu.np/wp-content/uploads/2019/02/Kiran-Rana.jpg";
-                URL url = new URL(imgURL);
-                IV.setImageBitmap(BitmapFactory.decodeStream((InputStream)url.getContent()));
-        } catch (IOException e) {
-            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RESULT_OK){
+            if (data ==null){
+                Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+
+            }
         }
-
+        Uri uri = data.getData();
+        imagePath = getRealPathFromUri(uri);
+        previewImage(imagePath);
     }
+
+    private void previewImage(String imagePath) {
+        File imgFile = new File(imagePath);
+        if(imgFile.exists()){
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            IV.setImageBitmap(myBitmap);
+        }
+    }
+
+    private String getRealPathFromUri(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        CursorLoader Loader = new CursorLoader(getApplicationContext(), uri, projection, null,null,null);
+        Cursor cursor = Loader.loadInBackground();
+        int colIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(colIndex);
+        cursor.close();
+        return result;
+    }
+    //    private void StrictMode(){
+//        android.os.StrictMode.ThreadPolicy policy= new android.os.StrictMode.ThreadPolicy.Builder().permitAll().build();
+//        android.os.StrictMode.setThreadPolicy(policy)   ;
+//    }
+//    private void LoadFormURl() {
+//        StrictMode();
+//        try {
+//                String imgURL = "https://softwarica.edu.np/wp-content/uploads/2019/02/Kiran-Rana.jpg";
+//                URL url = new URL(imgURL);
+//                IV.setImageBitmap(BitmapFactory.decodeStream((InputStream)url.getContent()));
+//        } catch (IOException e) {
+//            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();;
+//        }
+//
+//    }
 
     private void Add(){
 
