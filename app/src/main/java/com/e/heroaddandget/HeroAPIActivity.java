@@ -22,8 +22,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import HeroAPI.HeroAPI;
+import HeroModel.ImageResponse;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,6 +42,7 @@ public class HeroAPIActivity extends AppCompatActivity {
     Button btnSave;
     ImageView IV;
     String imagePath;
+    String imageName;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,17 +118,44 @@ public class HeroAPIActivity extends AppCompatActivity {
 //        }
 //
 //    }
+    private void StrictMode(){
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+    }
+
+    private void SaveImageOnly(){
+        File file = new File(imagePath);
+        RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("imageFile", file.getName(), requestBody);
+
+        HeroAPI heroAPI = Url.getInstance().create(HeroAPI.class);
+        Call<ImageResponse> responseBodyCall = heroAPI.uploadImage(body);
+
+        StrictMode();
+        try {
+            Response<ImageResponse> imageResponseResponse = responseBodyCall.execute();
+            String imageName = imageResponseResponse.body().getFilename();
+
+        }catch (IOException e){
+            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+    }
 
     private void Add(){
+        SaveImageOnly();
 
         String name = etHeroname.getText().toString();
         String desc = etDesc.getText().toString();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Url.BaseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        HeroAPI heroAPI = retrofit.create(HeroAPI.class);
-        Call<Void> heroesCall = heroAPI.addHero(name,desc);
+
+        Map<String, String>map = new HashMap<>();
+        map.put("name", name);
+        map.put("desc",desc);
+        map.put("image",imageName);
+
+
+        HeroAPI heroAPI = Url.getInstance().create(HeroAPI.class);
+        Call<Void> heroesCall = heroAPI.addHero(map);
 
         heroesCall.enqueue(new Callback<Void>() {
             @Override
@@ -141,6 +175,7 @@ public class HeroAPIActivity extends AppCompatActivity {
                 Toast.makeText(HeroAPIActivity.this, "Error"+ t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+        Intent intent = new Intent(HeroAPIActivity.this, DashboardActivity.class);
         }
     }
 
