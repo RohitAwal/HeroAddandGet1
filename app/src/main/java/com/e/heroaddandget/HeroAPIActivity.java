@@ -134,7 +134,7 @@ public class HeroAPIActivity extends AppCompatActivity {
         StrictMode();
         try {
             Response<ImageResponse> imageResponseResponse = responseBodyCall.execute();
-            String imageName = imageResponseResponse.body().getFilename();
+            imageName = imageResponseResponse.body().getFilename();
 
         }catch (IOException e){
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
