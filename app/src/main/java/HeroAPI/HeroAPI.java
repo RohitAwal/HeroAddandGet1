@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import HeroModel.ImageResponse;
+import HeroModel.LoginSignupResponse;
 import okhttp3.MultipartBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -27,4 +28,13 @@ public interface HeroAPI {
     Call<ImageResponse> uploadImage(@Part MultipartBody.Part img);
     @GET("heroes")
     Call<List<HeroAPI>> getAllHeroes();
+
+    @FormUrlEncoded
+    @POST("users/login")
+    Call<LoginSignupResponse> checkUser(@Field("username") String username, @Field("password") String password);
+
+    @FormUrlEncoded
+    @POST("users/signup")
+    Call<LoginSignupResponse> registerUser(@Field("username") String username, @Field("password") String password);
+
 }
